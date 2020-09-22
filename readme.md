@@ -1,6 +1,5 @@
 # OS locale detector (os-locale-s)
-![Node.js CI](https://github.com/jeffy-g/os-locale-s/workflows/Node.js%20CI/badge.svg) ![GitHub](https://img.shields.io/github/license/jeffy-g/os-locale-s?style=flat)
-
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/jeffy-g/os-locale-s.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/jeffy-g/os-locale-s/context:javascript) ![Node.js CI](https://github.com/jeffy-g/os-locale-s/workflows/Node.js%20CI/badge.svg) ![GitHub](https://img.shields.io/github/license/jeffy-g/os-locale-s?style=flat) 
 
 __Its a light weight version that minimizes the dependency module of `os-locale`__
 
