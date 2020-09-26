@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const ifDefined = (varName, fallback) => typeof globalThis[varName] !== "undefined" ? globalThis[varName] : fallback;
+const ifDefined = (varName, fallback) => typeof global[varName] !== "undefined" ? global[varName] : fallback;
 const debug = ifDefined("printSync", false);
 const asyncDebug = ifDefined("printAsync", false);
 const DEFAULT = 1;
