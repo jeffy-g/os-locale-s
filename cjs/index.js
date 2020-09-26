@@ -125,7 +125,7 @@ let detector;
         enumerable: false,
     });
     Object.defineProperty(detector, "version", {
-        value: "v1.0.6",
+        value: "v1.0.7",
         enumerable: true,
     });
 }

@@ -1,6 +1,6 @@
 {
   "name": "os-locale-s",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Its a light weight version that minimizes the dependency module of `os-locale`",
   "private": false,
   "main": "./cjs/index.js",
@@ -28,10 +28,8 @@
     "package.json",
     "license",
     "reamd.md",
-    ".github",
     "cjs",
     "esm",
-    "*.js",
     "*.d.ts"
   ],
   "keywords": [
@@ -49,13 +47,13 @@
     "identifier",
     "region"
   ],
-  "scripts": {
-    "test": "jest --coverage --silent=false --colors -c=jest.configjs.js"
+  "dependencies": {
+    "lcid": "^3.0.0"
   },
   "devDependencies": {
     "jest": "^26.4.2"
   },
-  "dependencies": {
-    "lcid": "^3.0.0"
+  "scripts": {
+    "test": "jest --coverage --silent=false --colors -c=jest.configjs.js"
   }
 }
