@@ -65,7 +65,7 @@ function eachModule(path) {
             process.env = {};
             return new Promise(resolve => {
                 Promise.resolve().then(() => require(path)).then((m) => {
-                    osLocale = m.osLocale;
+                    ({ osLocale } = m);
                     resolve();
                 });
             });

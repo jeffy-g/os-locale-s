@@ -72,16 +72,17 @@ const [getWinLocale, getWinLocaleSync] = ((cmd0, args0) => {
 })("wmic", ["os", "get", "locale"]);
 let detector;
 {
-    const syncFunctions = {
-        win32: getWinLocaleSync,
-        darwin: getAppleLocaleSync,
-        linux: getUnixLocaleSync,
-    };
-    const asyncFunctions = {
-        win32: getWinLocale,
-        darwin: getAppleLocale,
-        linux: getUnixLocale,
-    };
+    const gettersSlot = [
+        {
+            win32: getWinLocaleSync,
+            darwin: getAppleLocaleSync,
+            linux: getUnixLocaleSync,
+        }, {
+            win32: getWinLocale,
+            darwin: getAppleLocale,
+            linux: getUnixLocale,
+        }
+    ];
     const typeString = {}.toString;
     const isPromise = (o) => typeString.call(o) === "[object Promise]";
     let cacheLocal;
@@ -91,7 +92,7 @@ let detector;
         if (cache && (cacheLocal === null || cacheLocal === void 0 ? void 0 : cacheLocal.length)) {
             return (async ? Promise.resolve(cacheLocal) : cacheLocal);
         }
-        const functions = async ? asyncFunctions : syncFunctions;
+        const functions = gettersSlot[+(!!async)];
         let locale;
         const withCache = (l, mustPromise) => {
             l = normalise(l);
@@ -118,13 +119,15 @@ let detector;
     };
     detector = (base(true));
     detector.sync = base();
-    Object.defineProperty(detector, "purge", {
-        value: () => cacheLocal = void 0,
-        enumerable: false,
-    });
-    Object.defineProperty(detector, "version", {
-        value: "v1.0.7",
-        enumerable: true,
+    Object.defineProperties(detector, {
+        purge: {
+            value: () => cacheLocal = void 0,
+            enumerable: false,
+        },
+        version: {
+            value: "v1.0.8",
+            enumerable: true,
+        },
     });
 }
 export const osLocale = Object.freeze(detector);
