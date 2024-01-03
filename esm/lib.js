@@ -64,7 +64,7 @@ function execCommand(options) {
             return /** @type {R} */ (execFileSync(command, args /*, execOpt*/));
         }
         catch (e) {
-            return e;
+            return /** @type {R} */ (e);
         }
     }
 }
@@ -78,6 +78,7 @@ function execCommand(options) {
  * @todo latest error cache
  * @param {string | any} result `string` or `Error` object
  * @param {(result: string) => string} [processor] If `result` is a `string`, delegate processing
+ * @todo strict check of `result`
  */
 function validate(result, processor) {
     if (typeof result === "string" && result.length) {
@@ -136,13 +137,11 @@ const [getAppleLocale, getAppleLocaleSync] = /** @type {TAppleLocaleFunctions} *
             const results = await Promise.all([
                 execCommand({
                     async: true,
-                    command: cmd0,
-                    args: args0
+                    command: cmd0, args: args0
                 }).then(ret => validate(ret)),
                 execCommand({
                     async: true,
-                    command: cmd1,
-                    args: args1
+                    command: cmd1, args: args1
                 }).then(ret => validate(ret)),
             ]);
             return getSupportedLocale(results[0], results[1]);
@@ -151,11 +150,9 @@ const [getAppleLocale, getAppleLocaleSync] = /** @type {TAppleLocaleFunctions} *
          * Locale detection for MAC OS
          */
         () => getSupportedLocale(validate(execCommand({
-            command: cmd0,
-            args: args0
+            command: cmd0, args: args0
         })), validate(execCommand({
-            command: cmd1,
-            args: args1
+            command: cmd1, args: args1
         })))
     ];
 })("defaults", ["read", "-globalDomain", "AppleLocale"], "locale", ["-a"]);
@@ -166,8 +163,7 @@ const [getUnixLocale, getUnixLocaleSync] = /** @type {(cmd: TLocalCmdToken) => T
          * @async
          */
         async () => pet(parseLocale(await execCommand({
-            async: true,
-            command: cmd
+            async: true, command: cmd
         }).then(ret => validate(ret)))),
         /**
          * Locale detection for UNIX OS related
