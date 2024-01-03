@@ -22,7 +22,7 @@ const cp = require("child_process");
 const { execFile, execFileSync } = cp;
 /**
  * @template T, A, B
- * @typedef {unknown extends T ? A : T extends (void | false | undefined) ? A : B} Conditional
+ * @typedef {void extends T ? A : T extends (void | false | undefined) ? A : B} Conditional
  */
 /**
  * @template R
@@ -37,37 +37,40 @@ const { execFile, execFileSync } = cp;
  */
 const defaultLocale = "en_US";
 /**
+ * @typedef {cp.ExecFileException} ExecFileException
  * @typedef {"defaults" | "locale" | "wmic"} TLocalCmdToken
+ * @typedef TExecuteCmdOpt
+ * @prop {true} [async]
+ * @prop {TLocalCmdToken} command
+ * @prop {readonly string[]} [args]
  */
 /**
- * execute command by execFile
- *
- * more details see {@link https://nodejs.org/api/child_process.html#child_process_child_process_execfile_file_args_options_callback child_process.execFile}
- *
- * @param {TLocalCmdToken} command
- * @param {readonly string[]} [args]
+ * @template {TExecuteCmdOpt} P
+ * @template {Conditional<P["async"], string, Promise<string | ExecFileException>>} R
+ * @param {P} options
+ * @returns {R}
+ * @date 2024-01-03
  */
-const getStdOut = (command, args) => new Promise((resolve) => {
-    execFile(command, args /*, execOpt*/, (err, stdout /*, stderr*/) => {
-        resolve(err || stdout);
-    });
-});
-/**
- * execute command by execFileSync
- *
- * more details see {@link https://nodejs.org/api/child_process.html#child_process_child_process_execfilesync_file_args_options child_process.execFileSync}
- *
- * @param {TLocalCmdToken} command
- * @param {readonly string[]} [args]
- */
-const getStdOutSync = (command, args) => {
-    try {
-        return execFileSync(command, args /*, execOpt*/);
+function execCommand(options) {
+    const { async, command, args } = options;
+    if (async) {
+        /** @type {Promise<string | ExecFileException>} */
+        const p = new Promise((resolve) => {
+            execFile(command, args, (err, stdout) => {
+                resolve(err || stdout);
+            });
+        });
+        return /** @type {R} */ (p);
     }
-    catch (e) {
-        return e;
+    else {
+        try {
+            return /** @type {R} */ (execFileSync(command, args /*, execOpt*/));
+        }
+        catch (e) {
+            return e;
+        }
     }
-};
+}
 /**
  * If an exception occurs while executing command such as
  * `locale`, `wmic os get locale` the result cannot be applied,
@@ -77,7 +80,7 @@ const getStdOutSync = (command, args) => {
  *
  * @todo latest error cache
  * @param {string | any} result `string` or `Error` object
- * @param {(result: string) => TBD<string>} [processor] If `result` is a `string`, delegate processing
+ * @param {(result: string) => string} [processor] If `result` is a `string`, delegate processing
  */
 function validate(result, processor) {
     if (typeof result === "string" && result.length) {
@@ -123,7 +126,10 @@ exports.purgeExtraToken = pet;
  * @param {string} locales result of command `locale -a`
  */
 const getSupportedLocale = (locale, locales) => locales.includes(locale) ? locale : /* istanbul ignore next */ defaultLocale;
-const [getAppleLocale, getAppleLocaleSync] = /** @type {(a: TLocalCmdToken, b: string[], c: TLocalCmdToken, d: string[]) => TAsyncSyncPair} */ ((cmd0, args0, cmd1, args1) => {
+/**
+ * @typedef {(a: TLocalCmdToken, b: string[], c: TLocalCmdToken, d: string[]) => TAsyncSyncPair} TAppleLocaleFunctions
+ */
+const [getAppleLocale, getAppleLocaleSync] = /** @type {TAppleLocaleFunctions} */ ((cmd0, args0, cmd1, args1) => {
     return [
         /**
          * Locale detection for MAC OS
@@ -131,15 +137,29 @@ const [getAppleLocale, getAppleLocaleSync] = /** @type {(a: TLocalCmdToken, b: s
          */
         async () => {
             const results = await Promise.all([
-                getStdOut(cmd0, args0).then(ret => validate(ret)),
-                getStdOut(cmd1, args1).then(ret => validate(ret))
+                execCommand({
+                    async: true,
+                    command: cmd0,
+                    args: args0
+                }).then(ret => validate(ret)),
+                execCommand({
+                    async: true,
+                    command: cmd1,
+                    args: args1
+                }).then(ret => validate(ret)),
             ]);
             return getSupportedLocale(results[0], results[1]);
         },
         /**
          * Locale detection for MAC OS
          */
-        () => getSupportedLocale(validate(getStdOutSync(cmd0, args0)), validate(getStdOutSync(cmd1, args1)))
+        () => getSupportedLocale(validate(execCommand({
+            command: cmd0,
+            args: args0
+        })), validate(execCommand({
+            command: cmd1,
+            args: args1
+        })))
     ];
 })("defaults", ["read", "-globalDomain", "AppleLocale"], "locale", ["-a"]);
 const [getUnixLocale, getUnixLocaleSync] = /** @type {(cmd: TLocalCmdToken) => TAsyncSyncPair} */ ((cmd) => {
@@ -148,11 +168,14 @@ const [getUnixLocale, getUnixLocaleSync] = /** @type {(cmd: TLocalCmdToken) => T
          * Locale detection for UNIX OS related
          * @async
          */
-        async () => pet(parseLocale(await getStdOut(cmd).then(ret => validate(ret)))),
+        async () => pet(parseLocale(await execCommand({
+            async: true,
+            command: cmd
+        }).then(ret => validate(ret)))),
         /**
          * Locale detection for UNIX OS related
          */
-        () => pet(parseLocale(validate(getStdOutSync(cmd))))
+        () => pet(parseLocale(validate(execCommand({ command: cmd }))))
     ];
 })("locale");
 /**
@@ -164,6 +187,7 @@ const parseLCID = (result) => {
     return lcid.from(lcidCode) || defaultLocale;
 };
 const [getWinLocale, getWinLocaleSync] = /** @type {(a: TLocalCmdToken, b: string[]) => TAsyncSyncPair} */ ((cmd0, args0) => {
+    const opt = { command: cmd0, args: args0 };
     return [
         /**
          * Locale detection for windows OS
@@ -172,11 +196,11 @@ const [getWinLocale, getWinLocaleSync] = /** @type {(a: TLocalCmdToken, b: strin
          *
          * @async
          */
-        async () => validate(await getStdOut(cmd0, args0), parseLCID),
+        async () => validate(await execCommand(opt), parseLCID),
         /**
          * Locale detection for windows OS
          */
-        () => validate(getStdOutSync(cmd0, args0), parseLCID)
+        () => validate(execCommand(opt), parseLCID)
     ];
 })("wmic", ["os", "get", "locale"]);
 /** @type {[ TGetLocaleFunctions<string>, TGetLocaleFunctions<Promise<string>> ]} */
