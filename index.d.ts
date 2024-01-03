@@ -10,6 +10,8 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
+///<reference types="basic-types"/>
+
 export declare interface LocaleDetectorOptions {
     /**
      * Set to `false` to avoid spawning subprocesses and instead only resolve the locale from environment variables.
@@ -53,6 +55,17 @@ export declare interface LocaleDetector extends LocaleDetectorBase {
      */
     sync(options?: LocaleDetectorOptions): string;
 }
+
+/**
+ * @internal
+ */
+export type TInternalLocaleDetectorSig = {
+    bivarianceHack<IsAsync extends true | void, R extends Conditional<IsAsync, string, Promise<string>>>(async?: IsAsync): (options?: LocaleDetectorOptions) => R;
+}["bivarianceHack"];
+/**
+ * @internal
+ */
+export type TInternalLocaleDetectorResult = ReturnType<ReturnType<TInternalLocaleDetectorSig>>;
 
 export declare const osLocale: LocaleDetector;
 
