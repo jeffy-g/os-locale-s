@@ -59,13 +59,11 @@ function execCommand(options) {
         });
         return /** @type {R} */ (p);
     }
-    else {
-        try {
-            return /** @type {R} */ (execFileSync(command, args /*, execOpt*/));
-        }
-        catch (e) {
-            return /** @type {R} */ (e);
-        }
+    try {
+        return /** @type {R} */ (execFileSync(command, args, { encoding: "utf8" }));
+    }
+    catch (e) {
+        return /** @type {R} */ (e);
     }
 }
 /**
@@ -76,13 +74,17 @@ function execCommand(options) {
  *  * If `result` is empty string, Error object, etc., returns "__en_US__"
  *
  * @todo latest error cache
- * @param {string | any} result `string` or `Error` object
+ * @param {string | Error} result `string` or `Error` object
  * @param {(result: string) => string} [processor] If `result` is a `string`, delegate processing
  * @todo strict check of `result`
  */
 function validate(result, processor) {
     if (typeof result === "string" && result.length) {
         return processor ? processor(result) : result.trim();
+    }
+    /* istanbul ignore next */
+    if (result instanceof Error) {
+        console.error(result);
     }
     return defaultLocale;
 }
@@ -138,11 +140,11 @@ const [getAppleLocale, getAppleLocaleSync] = /** @type {TAppleLocaleFunctions} *
                 execCommand({
                     async: true,
                     command: cmd0, args: args0
-                }).then(ret => validate(ret)),
+                }).then(validate),
                 execCommand({
                     async: true,
                     command: cmd1, args: args1
-                }).then(ret => validate(ret)),
+                }).then(validate),
             ]);
             return getSupportedLocale(results[0], results[1]);
         },
@@ -164,7 +166,7 @@ const [getUnixLocale, getUnixLocaleSync] = /** @type {(cmd: TLocalCmdToken) => T
          */
         async () => pet(parseLocale(await execCommand({
             async: true, command: cmd
-        }).then(ret => validate(ret)))),
+        }).then(validate))),
         /**
          * Locale detection for UNIX OS related
          */
@@ -179,8 +181,7 @@ const parseLCID = (result) => {
     const lcidCode = parseInt(result.replace("Locale", ""), 16);
     return lcid.from(lcidCode) || defaultLocale;
 };
-const [getWinLocale, getWinLocaleSync] = /** @type {(a: TLocalCmdToken, b: string[]) => TAsyncSyncPair} */ ((cmd0, args0) => {
-    const opt = { command: cmd0, args: args0 };
+const [getWinLocale, getWinLocaleSync] = /** @type {(a: TLocalCmdToken, b: string[]) => TAsyncSyncPair} */ ((command, args) => {
     return [
         /**
          * Locale detection for windows OS
@@ -189,11 +190,11 @@ const [getWinLocale, getWinLocaleSync] = /** @type {(a: TLocalCmdToken, b: strin
          *
          * @async
          */
-        async () => validate(await execCommand(opt), parseLCID),
+        async () => validate(await execCommand({ command, args, async: true }), parseLCID),
         /**
          * Locale detection for windows OS
          */
-        () => validate(execCommand(opt), parseLCID)
+        () => validate(execCommand({ command, args }), parseLCID)
     ];
 })("wmic", ["os", "get", "locale"]);
 /** @type {[ TGetLocaleFunctions<string>, TGetLocaleFunctions<Promise<string>> ]} */
