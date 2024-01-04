@@ -1,5 +1,37 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+/*!
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  Copyright (C) 2020 jeffy-g <hirotom1107@gmail.com>
+  Released under the MIT license
+  https://opensource.org/licenses/mit-license.php
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*/
+// @ts-ignore 
+/// <reference path="./index.d.ts"/>
+// @ts-ignore 
+/// <reference path="../src/index.d.ts"/>
+/**
+ * @typedef {typeof process.platform} TOSTokens
+ * @typedef {keyof typeof global} TGThisKeys
+ * @typedef {[spawn?: boolean, cache?: boolean]} TDetectorOptValues
+ * @typedef TProcessCache
+ * @prop {typeof process["env"]} env
+ * @prop {TOSTokens} platform
+ */
+/**
+ * @template {*} T
+ * @typedef {{-readonly [P in keyof T]: T[P]}} XReadonly
+ */
+/**
+ * @typedef LocaleDetectorOptions
+ * @prop {boolean} [spawn] Set to `false` to avoid spawning subprocesses and instead only resolve the locale from environment variables.&#64;default true
+ * @prop {boolean} [cache] &#64;default true
+ */
+/**
+ * @type {NsOsLocale.LocaleDetector}
+ */
+let osLocale;
+// @ts-ignore 
 const ifDefined = (varName, fallback) => typeof global[varName] !== "undefined" ? global[varName] : fallback;
 const debug = ifDefined("printSync", false);
 const asyncDebug = ifDefined("printAsync", false);
@@ -8,28 +40,49 @@ const WIN = 1;
 const LINUX = 1;
 const DARWIN = 1;
 const reLocale = /^(?:[a-z]{2}-[A-Z]{2}|C|POSIX)$/;
-const cache = {};
+/** @type {TProcessCache} */
+const cache = {
+    env: process.env,
+    platform: process.platform
+};
+/**
+ *
+ * @param {TOSTokens} platform "darwin", "linux", "win32"
+ */
 const setPlatform = (platform) => {
     Object.defineProperty(process, "platform", { value: platform });
 };
-const emitPlatformSetter = (platform, altProcess) => () => {
+/**
+ * @param {TOSTokens} platform
+ * @param {() => void} [extraProcess]
+ * @returns {() => Promise<void>}
+ */
+const setPlatformOf = (platform, extraProcess) => () => {
     return new Promise(resolve => {
-        if (typeof altProcess === "function")
-            altProcess();
+        extraProcess && extraProcess();
         setPlatform(platform);
+        // @ts-ignore @internal
         osLocale.purge();
         resolve();
     });
 };
+/**
+ * @param {boolean=} b
+ * @returns {b is boolean}
+ */
 const isBool = (b) => typeof b === "boolean";
+/**
+ * @param {TDetectorOptValues=} bools
+ * @returns
+ */
 function makeOption(bools) {
+    /** @type {XReadonly<LocaleDetectorOptions>} */
     const opt = {};
     const [spawn, cache] = bools || [];
     isBool(spawn) && (opt.spawn = spawn);
     isBool(cache) && (opt.cache = cache);
     return (isBool(spawn) || isBool(cache)) ? opt : void 0;
 }
-let osLocale;
 const tryMatch = (lc) => {
     try {
         expect(lc).toMatch(reLocale);
@@ -38,78 +91,80 @@ const tryMatch = (lc) => {
         console.warn("There are no locales available in this environment.");
     }
 };
-const asyncCallbackEmitter = (plat, bools) => async () => {
-    const opt = makeOption(bools);
-    const locale = await osLocale(opt);
-    asyncDebug && console.log(`async [${plat}]: ${locale}`);
+/**
+ * @param {string} prefix
+ * @param {string} locale
+ * @param {XReadonly<LocaleDetectorOptions>=} opt
+ */
+const printInfo = (prefix, locale, opt) => console.log(`${prefix}[platform: ${process.platform}, options: ${opt ? JSON.stringify(opt) : "use default(undefined)"}]: ${locale}`);
+/**
+ * @param {TDetectorOptValues=} detectorOpt [spawn, cache]
+ * @param {true=} async
+ */
+const emitCallback = (detectorOpt, async) => async () => {
+    const opt = makeOption(detectorOpt);
+    const fn = async ? osLocale : osLocale.sync;
+    const result = fn(opt);
+    const locale = /** @type {string} */ (async ? await result : result);
+    debug && printInfo(async ? "async " : "", locale, opt);
     tryMatch(locale);
 };
-const syncCallbackEmitter = (plat, bools) => () => {
-    const opt = makeOption(bools);
-    const locale = osLocale.sync(opt);
-    debug && console.log(`[${plat}]: ${locale}`);
-    tryMatch(locale);
-};
-beforeAll(async () => {
-    return new Promise(resolve => {
-        cache.env = process.env;
-        cache.platform = process.platform;
-        resolve();
-    });
-});
-// eachModule("../src/");
-eachModule("./");
+
+eachModule(".");
+/**
+ * @param {string} path module path `"../src/"(.ts)` or `"../dist/"(.js)`
+ */
 function eachModule(path) {
-    describe(`[os-locale-s], module - "${path}"`, function () {
-        beforeAll(() => {
+    describe(` ====================== running test: [os-locale-s], module - "${path}" ======================`, function () {
+        beforeAll(/** @type {() => Promise<void>} */ () => {
             process.env = {};
             return new Promise(resolve => {
-                Promise.resolve().then(() => require(path)).then((m) => {
+                Promise.resolve(`${path}`).then(s => require(s)).then((m) => {
                     ({ osLocale } = m);
                     resolve();
                 });
             });
         });
         describe.each([
-            ["linux", LINUX], ["win32", WIN], ["darwin", DARWIN]
-        ])("Platform: %s (process.env.platform)", (name, enable) => {
+            [/** @type {TOSTokens} */ ("linux"), LINUX], [/** @type {TOSTokens} */ ("win32"), WIN], [/** @type {TOSTokens} */ ("darwin"), DARWIN]
+        ])("[[[ Platform: %s (process.env.platform) ]]]", (name, enable) => {
             if (enable) {
-                beforeEach(emitPlatformSetter(name));
+                beforeEach(setPlatformOf(name));
                 describe("locale detection with default options", function () {
-                    it("async detection", asyncCallbackEmitter(name));
-                    it("sync detection", syncCallbackEmitter(name));
+                    it("async detection", emitCallback(void 0, true));
+                    it("sync detection", emitCallback());
                 });
                 describe("locale detection with default options (no spawn)", function () {
-                    it("async detection", asyncCallbackEmitter(name, [false]));
-                    it("sync detection", syncCallbackEmitter(name, [false]));
+                    it("async detection", emitCallback([false], true));
+                    it("sync detection", emitCallback([false]));
                 });
                 describe("locale detection with default options (no cache)", function () {
-                    it("async detection", asyncCallbackEmitter(name, [true, false]));
-                    it("sync detection", syncCallbackEmitter(name, [true, false]));
+                    it("async detection", emitCallback([true, false], true));
+                    it("sync detection", emitCallback([true, false]));
                 });
                 describe("locale detection with no spawn, no cache", function () {
-                    it("async detection", asyncCallbackEmitter(name, [false, false]));
-                    it("sync detection", syncCallbackEmitter(name, [false, false]));
+                    it("async detection", emitCallback([false, false], true));
+                    it("sync detection", emitCallback([false, false]));
                 });
             }
         });
-        DEFAULT && describe("OS: default (**Test depending on the actual platform)", () => {
-            beforeAll(emitPlatformSetter(cache.platform, () => process.env = cache.env));
+        DEFAULT && describe("[[[ OS: default (**Test depending on the actual platform) ]]]", () => {
+            beforeAll(setPlatformOf(cache.platform, () => process.env = cache.env));
             describe("locale detection with default options", function () {
-                it("async detection", asyncCallbackEmitter("default"));
-                it("sync detection", syncCallbackEmitter("default"));
+                it("async detection", emitCallback(void 0, true));
+                it("sync detection", emitCallback());
             });
             describe("locale detection with default options (no spawn)", function () {
-                it("async detection", asyncCallbackEmitter("default", [false]));
-                it("sync detection", syncCallbackEmitter("default", [false]));
+                it("async detection", emitCallback([false], true));
+                it("sync detection", emitCallback([false]));
             });
             describe("locale detection with default options (no cache)", function () {
-                it("async detection", asyncCallbackEmitter("default", [true, false]));
-                it("sync detection", syncCallbackEmitter("default", [true, false]));
+                it("async detection", emitCallback([true, false], true));
+                it("sync detection", emitCallback([true, false]));
             });
             describe("locale detection with no spawn, no cache", function () {
-                it("async detection", asyncCallbackEmitter("default", [false, false]));
-                it("sync detection", syncCallbackEmitter("default", [false, false]));
+                it("async detection", emitCallback([false, false], true));
+                it("sync detection", emitCallback([false, false]));
             });
         });
     });

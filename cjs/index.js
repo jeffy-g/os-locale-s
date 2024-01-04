@@ -32,7 +32,10 @@ let detector;
     const isPromise = (o) => typeof o.then === "function";
     let cacheLocal = "";
     /**
-     * @type {NsOsLocale.TInternalLocaleDetectorSig}
+     * @template {true | void} IsAsync
+     * @template {Conditional<IsAsync, string, Promise<string>>} R
+     * @param {IsAsync=} async
+     * @returns {(options?: NsOsLocale.LocaleDetectorOptions) => R}
      */
     const detectorBase = (async) => (options = {}) => {
         /* eslint-disable indent */
@@ -42,7 +45,7 @@ let detector;
             return (async ? Promise.resolve(cacheLocal) : cacheLocal);
         }
         const functions = localeGetters[+(!!async)];
-        /** @type {NsOsLocale.TInternalLocaleDetectorResult} */
+        /** @type {R} */
         let locale;
         /**
          * @param {string} l
@@ -52,18 +55,18 @@ let detector;
         const withCache = (l, mustPromise) => {
             l = l.replace(/_/, "-");
             cacheLocal = cache ? l : "";
-            return (mustPromise ? Promise.resolve(l) : l);
+            return /** @type {NsOsLocale.TInternalLocaleDetectorResult} */ (mustPromise ? Promise.resolve(l) : l);
         };
         const envLocale = getEnvLocale();
         if (envLocale || !options.spawn) {
-            locale = purgeExtraToken(envLocale);
+            locale = /** @type {R} */ (purgeExtraToken(envLocale));
         }
         else {
             let { platform } = process;
             if (platform !== "win32" && platform !== "darwin") {
                 platform = "linux";
             }
-            locale = functions[platform]();
+            locale = /** @type {R} */ (functions[platform]());
         }
         return (isPromise(locale) ? locale.then(withCache) : withCache(locale, async === true || void 0));
     };
@@ -77,7 +80,7 @@ let detector;
             enumerable: false,
         },
         version: {
-            value: "v1.0.19",
+            value: "v1.0.20",
             enumerable: true,
         },
     });

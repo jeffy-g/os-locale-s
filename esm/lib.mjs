@@ -178,8 +178,8 @@ const [getUnixLocale, getUnixLocaleSync] = /** @type {(cmd: TLocalCmdToken) => T
  * @see {@link module:lcid}
  */
 const parseLCID = (result) => {
-    const lcidCode = parseInt(result.replace("Locale", ""), 16);
-    return lcid.from(lcidCode) || defaultLocale;
+    const lcidCode = +("0x" + result.replace(/Locale|\s/g, ""));
+    return lcid.from(lcidCode) || /* istanbul ignore next */ defaultLocale;
 };
 const [getWinLocale, getWinLocaleSync] = /** @type {(a: TLocalCmdToken, b: string[]) => TAsyncSyncPair} */ ((command, args) => {
     return [
