@@ -11,19 +11,12 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-// @ts-ignore
 ///<reference path="../index.d.ts"/>
-///<reference path="./index.d.ts"/>
-///<reference path="./extra-types.d.ts"/>
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.localeGetters = exports.purgeExtraToken = exports.getEnvLocale = void 0;
 const lcid = require("lcid");
 const cp = require("child_process");
 const { execFile, execFileSync } = cp;
-/**
- * @template T, A, B
- * @typedef {void extends T ? A : T extends (void | false | undefined) ? A : B} Conditional
- */
 /**
  * @template R
  * @typedef {{

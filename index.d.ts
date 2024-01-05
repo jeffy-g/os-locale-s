@@ -10,7 +10,36 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-///<reference types="basic-types"/>
+
+declare global {
+    /**
+     * T is falsy then return A, trusy then B
+     * 
+     * ```ts
+     * type ConditionalX<T, A, B> = T extends (void | false | undefined) ? A : B // <- maybe not works
+     * type Conditional<T, A, B> = void extends T ? A : T extends (void | false | undefined) ? A : B;
+     * 
+     * function x<T extends true | void, R extends ConditionalX<T, string, string[]>>(need?: T): R {
+     *     return (need? "": [""]) as R;
+     * }
+     * // string | string[]
+     * const xret = x();
+     * // string[]
+     * const xret2 = x(true);
+     * 
+     * function ok<T extends true | void, R extends Conditional<T, string, string[]>>(need?: T): R {
+     *     return (need? "": [""]) as R;
+     * }
+     * // string
+     * const okret = ok();
+     * // string[]
+     * const okret2 = ok(true);
+     * ```
+     * 
+     * @date 20/03/31
+     */
+    type Conditional<T, A, B> = void extends T ? A : T extends (void | false | undefined) ? A : B;
+}
 
 export declare interface LocaleDetectorOptions {
     /**

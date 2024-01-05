@@ -10,17 +10,10 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-// @ts-ignore
 ///<reference path="../index.d.ts"/>
-///<reference path="./index.d.ts"/>
-///<reference path="./extra-types.d.ts"/>
 import * as lcid from "lcid";
 import * as cp from "child_process";
 const { execFile, execFileSync } = cp;
-/**
- * @template T, A, B
- * @typedef {void extends T ? A : T extends (void | false | undefined) ? A : B} Conditional
- */
 /**
  * @template R
  * @typedef {{

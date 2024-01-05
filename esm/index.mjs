@@ -11,9 +11,7 @@
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 // @ts-check
-// @ts-ignore
 ///<reference path="../index.d.ts"/>
-///<reference types="basic-types"/>
 import * as lib from "./lib.mjs";
 /**
  * @typedef {(o: any) => o is Promise<any>} TPromiseChecker
@@ -34,6 +32,7 @@ let detector;
      * @param {IsAsync=} async
      * @returns {(options?: NsOsLocale.LocaleDetectorOptions) => R}
      */
+    // @ts-ignore 
     const detectorBase = (async) => (options = {}) => {
         /* eslint-disable indent */
         options = { spawn: true, cache: true, ...options };
@@ -77,7 +76,7 @@ let detector;
             enumerable: false,
         },
         version: {
-            value: "v1.0.21",
+            value: "v1.0.22",
             enumerable: true,
         },
     });

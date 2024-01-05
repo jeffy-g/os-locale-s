@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 /*!
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Copyright (C) 2020 jeffy-g <hirotom1107@gmail.com>
@@ -6,10 +7,7 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-// @ts-ignore 
 /// <reference path="./index.d.ts"/>
-// @ts-ignore 
-/// <reference path="../src/index.d.ts"/>
 const fs = require("fs");
 /**
  * @typedef {typeof process.platform} TOSTokens
@@ -33,10 +31,14 @@ const fs = require("fs");
  * @type {NsOsLocale.LocaleDetector}
  */
 let osLocale;
-// @ts-ignore 
+/**
+ * @param {TGThisKeys} varName
+ * @param {boolean} fallback
+ * @returns {boolean}
+ */
 const ifDefined = (varName, fallback) => typeof global[varName] !== "undefined" ? global[varName] : fallback;
+// @ts-ignore 
 const debug = ifDefined("printSync", false);
-const asyncDebug = ifDefined("printAsync", false);
 const DEFAULT = 1;
 const WIN = 1;
 const LINUX = 1;
@@ -115,11 +117,10 @@ const emitCallback = (localeResult, detectorOpt, async) => async () => {
     if (!root) {
         root = localeResult[process.platform] = {};
     }
-    root[`options: ${opt ? JSON.stringify(opt).replace(/\\"/g, "") : "use default(undefined)"}`] = locale;
+    root[`options: ${opt ? JSON.stringify(opt).replace(/"/g, "") : "use default(undefined)"}`] = locale;
     debug && printInfo(async ? "async " : "", locale, opt);
     tryMatch(locale);
 };
-
 eachModule(".");
 /**
  * @param {string} path module path `"../src/"(.ts)` or `"../dist/"(.js)`

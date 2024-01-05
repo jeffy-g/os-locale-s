@@ -1,6 +1,6 @@
 {
   "name": "os-locale-s",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "Its a light weight version that minimizes the dependency module of `os-locale`",
   "private": false,
   "main": "./cjs/index.js",
@@ -55,6 +55,6 @@
     "jest": "29.7.0"
   },
   "scripts": {
-    "test": "jest --silent=false --colors -c=jest.configjs.js"
+    "test": "jest --silent=false --colors -c=jest.configjs.js && cat logs/dots_test-result.json"
   }
 }
