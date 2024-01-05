@@ -77,7 +77,7 @@ let detector;
             enumerable: false,
         },
         version: {
-            value: "v1.0.20",
+            value: "v1.0.21",
             enumerable: true,
         },
     });

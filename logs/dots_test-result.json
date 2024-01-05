@@ -1,0 +1,20 @@
+{
+  "linux": {
+    "options: use default(undefined)": "C",
+    "options: {\"spawn\":false}": "en-US",
+    "options: {\"spawn\":true,\"cache\":false}": "C",
+    "options: {\"spawn\":false,\"cache\":false}": "en-US"
+  },
+  "win32": {
+    "options: use default(undefined)": "ja-JP",
+    "options: {\"spawn\":false}": "ja-JP",
+    "options: {\"spawn\":true,\"cache\":false}": "ja-JP",
+    "options: {\"spawn\":false,\"cache\":false}": "en-US"
+  },
+  "darwin": {
+    "options: use default(undefined)": "en-US",
+    "options: {\"spawn\":false}": "en-US",
+    "options: {\"spawn\":true,\"cache\":false}": "en-US",
+    "options: {\"spawn\":false,\"cache\":false}": "en-US"
+  }
+}

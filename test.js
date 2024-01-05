@@ -10,10 +10,12 @@
 /// <reference path="./index.d.ts"/>
 // @ts-ignore 
 /// <reference path="../src/index.d.ts"/>
+const fs = require("fs");
 /**
  * @typedef {typeof process.platform} TOSTokens
  * @typedef {keyof typeof global} TGThisKeys
  * @typedef {[spawn?: boolean, cache?: boolean]} TDetectorOptValues
+ * @typedef {Record<string, Record<string, string>>} TLocaleResultMap
  * @typedef TProcessCache
  * @prop {typeof process["env"]} env
  * @prop {TOSTokens} platform
@@ -96,16 +98,24 @@ const tryMatch = (lc) => {
  * @param {string} locale
  * @param {XReadonly<LocaleDetectorOptions>=} opt
  */
-const printInfo = (prefix, locale, opt) => console.log(`${prefix}[platform: ${process.platform}, options: ${opt ? JSON.stringify(opt) : "use default(undefined)"}]: ${locale}`);
+const printInfo = (prefix, locale, opt) => {
+    console.log(`${prefix}[platform: ${process.platform}, options: ${opt ? JSON.stringify(opt) : "use default(undefined)"}]: ${locale}`);
+};
 /**
+ * @param {TLocaleResultMap} localeResult
  * @param {TDetectorOptValues=} detectorOpt [spawn, cache]
  * @param {true=} async
  */
-const emitCallback = (detectorOpt, async) => async () => {
+const emitCallback = (localeResult, detectorOpt, async) => async () => {
     const opt = makeOption(detectorOpt);
     const fn = async ? osLocale : osLocale.sync;
     const result = fn(opt);
     const locale = /** @type {string} */ (async ? await result : result);
+    let root = localeResult[process.platform];
+    if (!root) {
+        root = localeResult[process.platform] = {};
+    }
+    root[`options: ${opt ? JSON.stringify(opt).replace(/\\"/g, "") : "use default(undefined)"}`] = locale;
     debug && printInfo(async ? "async " : "", locale, opt);
     tryMatch(locale);
 };
@@ -116,6 +126,8 @@ eachModule(".");
  */
 function eachModule(path) {
     describe(` ====================== running test: [os-locale-s], module - "${path}" ======================`, function () {
+        /** @type {TLocaleResultMap} */
+        const localeResult = {};
         beforeAll(/** @type {() => Promise<void>} */ () => {
             process.env = {};
             return new Promise(resolve => {
@@ -125,46 +137,54 @@ function eachModule(path) {
                 });
             });
         });
+        afterAll(() => {
+            const logRoot = "./logs/";
+            if (!fs.existsSync(logRoot)) {
+                fs.mkdirSync(logRoot);
+            }
+            const outputJsonPath = logRoot + path.replace(/[.]+/g, "dots").replace(/[/\\]/g, "_") + "_test-result.json";
+            fs.writeFileSync(outputJsonPath, JSON.stringify(localeResult, null, 2));
+        });
         describe.each([
             [/** @type {TOSTokens} */ ("linux"), LINUX], [/** @type {TOSTokens} */ ("win32"), WIN], [/** @type {TOSTokens} */ ("darwin"), DARWIN]
         ])("[[[ Platform: %s (process.env.platform) ]]]", (name, enable) => {
             if (enable) {
                 beforeEach(setPlatformOf(name));
                 describe("locale detection with default options", function () {
-                    it("async detection", emitCallback(void 0, true));
-                    it("sync detection", emitCallback());
+                    it("async detection", emitCallback(localeResult, void 0, true));
+                    it("sync detection", emitCallback(localeResult));
                 });
                 describe("locale detection with default options (no spawn)", function () {
-                    it("async detection", emitCallback([false], true));
-                    it("sync detection", emitCallback([false]));
+                    it("async detection", emitCallback(localeResult, [false], true));
+                    it("sync detection", emitCallback(localeResult, [false]));
                 });
                 describe("locale detection with default options (no cache)", function () {
-                    it("async detection", emitCallback([true, false], true));
-                    it("sync detection", emitCallback([true, false]));
+                    it("async detection", emitCallback(localeResult, [true, false], true));
+                    it("sync detection", emitCallback(localeResult, [true, false]));
                 });
                 describe("locale detection with no spawn, no cache", function () {
-                    it("async detection", emitCallback([false, false], true));
-                    it("sync detection", emitCallback([false, false]));
+                    it("async detection", emitCallback(localeResult, [false, false], true));
+                    it("sync detection", emitCallback(localeResult, [false, false]));
                 });
             }
         });
         DEFAULT && describe("[[[ OS: default (**Test depending on the actual platform) ]]]", () => {
             beforeAll(setPlatformOf(cache.platform, () => process.env = cache.env));
             describe("locale detection with default options", function () {
-                it("async detection", emitCallback(void 0, true));
-                it("sync detection", emitCallback());
+                it("async detection", emitCallback(localeResult, void 0, true));
+                it("sync detection", emitCallback(localeResult));
             });
             describe("locale detection with default options (no spawn)", function () {
-                it("async detection", emitCallback([false], true));
-                it("sync detection", emitCallback([false]));
+                it("async detection", emitCallback(localeResult, [false], true));
+                it("sync detection", emitCallback(localeResult, [false]));
             });
             describe("locale detection with default options (no cache)", function () {
-                it("async detection", emitCallback([true, false], true));
-                it("sync detection", emitCallback([true, false]));
+                it("async detection", emitCallback(localeResult, [true, false], true));
+                it("sync detection", emitCallback(localeResult, [true, false]));
             });
             describe("locale detection with no spawn, no cache", function () {
-                it("async detection", emitCallback([false, false], true));
-                it("sync detection", emitCallback([false, false]));
+                it("async detection", emitCallback(localeResult, [false, false], true));
+                it("sync detection", emitCallback(localeResult, [false, false]));
             });
         });
     });
