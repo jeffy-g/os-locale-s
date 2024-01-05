@@ -17,6 +17,7 @@ exports.localeGetters = exports.purgeExtraToken = exports.getEnvLocale = void 0;
 const lcid = require("lcid");
 const cp = require("child_process");
 const { execFile, execFileSync } = cp;
+const defaultLocale = "en_US";
 /**
  * @template R
  * @typedef {{
@@ -28,7 +29,6 @@ const { execFile, execFileSync } = cp;
 /**
  * @typedef {ArrayLike<[() => Promise<string>, () => string]>[0]} TAsyncSyncPair
  */
-const defaultLocale = "en_US";
 /**
  * @typedef {cp.ExecFileException} ExecFileException
  * @typedef {"defaults" | "locale" | "wmic"} TLocalCmdToken
@@ -78,9 +78,8 @@ function validate(result, processor) {
     if (typeof result === "string" && result.length) {
         return processor ? processor(result) : result.trim();
     }
-    /* istanbul ignore next */
-    if (result instanceof Error) {
-        console.error(result);
+    else {
+        console.info(result.message);
     }
     return defaultLocale;
 }
