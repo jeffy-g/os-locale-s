@@ -47,13 +47,9 @@ const defaultLocale = "en_US";
 function execCommand(options) {
     const { async, command, args } = options;
     if (async) {
-        /** @type {Promise<string | ExecFileException>} */
-        const p = new Promise((resolve) => {
-            execFile(command, args, (err, stdout) => {
-                resolve(err || stdout);
-            });
-        });
-        return /** @type {R} */ (p);
+        return /** @type {R} */ (new Promise((resolve) => {
+            execFile(command, args, (err, stdout) => resolve(err || stdout));
+        }));
     }
     try {
         return /** @type {R} */ (execFileSync(command, args, { encoding: "utf8" }));
@@ -79,6 +75,7 @@ function validate(result, processor) {
         return processor ? processor(result) : result.trim();
     }
     else {
+        // @ts-ignore 
         console.info(result.message);
     }
     return defaultLocale;
@@ -146,28 +143,32 @@ const [getAppleLocale, getAppleLocaleSync] = /** @type {TAppleLocaleFunctions} *
         /**
          * Locale detection for MAC OS
          */
-        () => getSupportedLocale(validate(execCommand({
-            command: cmd0, args: args0
-        })), validate(execCommand({
-            command: cmd1, args: args1
-        })))
+        () => getSupportedLocale(validate(execCommand({ command: cmd0, args: args0 })), validate(execCommand({ command: cmd1, args: args1 })))
     ];
 })("defaults", ["read", "-globalDomain", "AppleLocale"], "locale", ["-a"]);
-const [getUnixLocale, getUnixLocaleSync] = /** @type {(cmd: TLocalCmdToken) => TAsyncSyncPair} */ ((cmd) => {
+/** @type {(a: TLocalCmdToken, b: string[], p: (result: string) => string) => TAsyncSyncPair} */
+const emitGetters = (command, args, processor) => {
     return [
         /**
-         * Locale detection for UNIX OS related
+         * Locale detection for windows or UNIX OS
+         *
+         *   + `> locale`
+         *   + `> wmic os get locale`
+         *
          * @async
          */
-        async () => pet(parseLocale(await execCommand({
-            async: true, command: cmd
-        }).then(validate))),
+        async () => validate(await execCommand({ command, args, async: true }), processor),
         /**
-         * Locale detection for UNIX OS related
+         * Locale detection for windows or UNIX OS
          */
-        () => pet(parseLocale(validate(execCommand({ command: cmd }))))
+        () => validate(execCommand({ command, args }), processor)
     ];
-})("locale");
+};
+/** @type {Parameters<typeof validate>[1]} */
+const unixProcessor = (result) => {
+    return pet(parseLocale(result));
+};
+const [getUnixLocale, getUnixLocaleSync] = emitGetters("locale", [], unixProcessor);
 /**
  * @param {string} result
  * @see {@link module:lcid}
@@ -176,22 +177,7 @@ const parseLCID = (result) => {
     const lcidCode = +("0x" + result.replace(/Locale|\s/g, ""));
     return lcid.from(lcidCode) || /* istanbul ignore next */ defaultLocale;
 };
-const [getWinLocale, getWinLocaleSync] = /** @type {(a: TLocalCmdToken, b: string[]) => TAsyncSyncPair} */ ((command, args) => {
-    return [
-        /**
-         * Locale detection for windows OS
-         *
-         *   + `wmic os get locale`
-         *
-         * @async
-         */
-        async () => validate(await execCommand({ command, args, async: true }), parseLCID),
-        /**
-         * Locale detection for windows OS
-         */
-        () => validate(execCommand({ command, args }), parseLCID)
-    ];
-})("wmic", ["os", "get", "locale"]);
+const [getWinLocale, getWinLocaleSync] = emitGetters("wmic", ["os", "get", "locale"], parseLCID);
 /** @type {[ TGetLocaleFunctions<string>, TGetLocaleFunctions<Promise<string>> ]} */
 exports.localeGetters = [
     {

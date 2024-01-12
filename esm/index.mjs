@@ -46,12 +46,12 @@ let detector;
         /**
          * @param {string} l
          * @param {true} [mustPromise]
-         * @returns {NsOsLocale.TInternalLocaleDetectorResult}
+         * @returns {R}
          */
         const withCache = (l, mustPromise) => {
             l = l.replace(/_/, "-");
             cacheLocal = cache ? l : "";
-            return /** @type {NsOsLocale.TInternalLocaleDetectorResult} */ (mustPromise ? Promise.resolve(l) : l);
+            return /** @type {R} */ (mustPromise ? Promise.resolve(l) : l);
         };
         const envLocale = getEnvLocale();
         if (envLocale || !options.spawn) {
@@ -76,7 +76,7 @@ let detector;
             enumerable: false,
         },
         version: {
-            value: "v1.0.22",
+            value: "v1.0.26",
             enumerable: true,
         },
     });

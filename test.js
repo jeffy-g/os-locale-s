@@ -107,6 +107,7 @@ const printInfo = (prefix, locale, opt) => {
  * @param {TLocaleResultMap} localeResult
  * @param {TDetectorOptValues=} detectorOpt [spawn, cache]
  * @param {true=} async
+ * @returns {jest.ProvidesCallback}
  */
 const emitCallback = (localeResult, detectorOpt, async) => async () => {
     const opt = makeOption(detectorOpt);

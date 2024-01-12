@@ -91,10 +91,10 @@ export declare interface LocaleDetector extends LocaleDetectorBase {
 export type TInternalLocaleDetectorSig = {
     bivarianceHack<IsAsync extends true | void, R extends Conditional<IsAsync, string, Promise<string>>>(async?: IsAsync): (options?: LocaleDetectorOptions) => R;
 }["bivarianceHack"];
-/**
- * @internal
- */
-export type TInternalLocaleDetectorResult = ReturnType<ReturnType<TInternalLocaleDetectorSig>>;
+// /**
+//  * @internal
+//  */
+// export type TInternalLocaleDetectorResult = ReturnType<ReturnType<TInternalLocaleDetectorSig>>;
 
 export declare const osLocale: LocaleDetector;
 
