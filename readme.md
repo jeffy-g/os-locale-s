@@ -1,6 +1,7 @@
 # OS locale detector (os-locale-s)
 [![Node.js CI](https://github.com/jeffy-g/os-locale-s/actions/workflows/ci.yml/badge.svg)](https://github.com/jeffy-g/os-locale-s/actions/workflows/ci.yml)
 ![GitHub](https://img.shields.io/github/license/jeffy-g/os-locale-s?style=flat)
+![npm](https://img.shields.io/npm/dm/os-locale-s.svg?style=plastic)
 
 
 __Its a light weight version that minimizes the dependency module of `os-locale`__
