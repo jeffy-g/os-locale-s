@@ -14,8 +14,8 @@
 ///<reference path="../index.d.ts"/>
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.localeGetters = exports.purgeExtraToken = exports.getEnvLocale = void 0;
-const lcid = require("lcid");
 const cp = require("child_process");
+const lcid = require("lcid");
 const { execFile, execFileSync } = cp;
 const defaultLocale = "en_US";
 /**
@@ -171,7 +171,7 @@ const unixProcessor = (result) => {
 const [getUnixLocale, getUnixLocaleSync] = emitGetters("locale", [], unixProcessor);
 /**
  * @param {string} result
- * @see {@link module:lcid}
+ * @see {@link lcid}
  */
 const parseLCID = (result) => {
     const lcidCode = +("0x" + result.replace(/Locale|\s/g, ""));

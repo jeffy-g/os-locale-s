@@ -11,8 +11,8 @@
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 ///<reference path="../index.d.ts"/>
-import * as lcid from "lcid";
 import * as cp from "child_process";
+import * as lcid from "lcid";
 const { execFile, execFileSync } = cp;
 const defaultLocale = "en_US";
 /**
@@ -168,7 +168,7 @@ const unixProcessor = (result) => {
 const [getUnixLocale, getUnixLocaleSync] = emitGetters("locale", [], unixProcessor);
 /**
  * @param {string} result
- * @see {@link module:lcid}
+ * @see {@link lcid}
  */
 const parseLCID = (result) => {
     const lcidCode = +("0x" + result.replace(/Locale|\s/g, ""));

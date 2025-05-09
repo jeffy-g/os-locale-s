@@ -32,18 +32,18 @@ let detector;
     /**
      * @template {true | void} IsAsync
      * @template {Conditional<IsAsync, string, Promise<string>>} R
-     * @param {IsAsync=} async
+     * @param {IsAsync=} isAsync
      * @returns {(options?: NsOsLocale.LocaleDetectorOptions) => R}
      */
-    // @ts-ignore 
-    const detectorBase = (async) => (options = {}) => {
+    // @ts-ignore
+    const detectorBase = (isAsync) => (options = {}) => {
         /* eslint-disable indent */
         options = { spawn: true, cache: true, ...options };
         const { cache } = options;
         if (cache && cacheLocal.length) {
-            return (async ? Promise.resolve(cacheLocal) : cacheLocal);
+            return (isAsync ? Promise.resolve(cacheLocal) : cacheLocal);
         }
-        const functions = localeGetters[+(!!async)];
+        const functions = localeGetters[+(!!isAsync)];
         /** @type {R} */
         let locale;
         /**
@@ -67,7 +67,7 @@ let detector;
             }
             locale = /** @type {R} */ (functions[platform]());
         }
-        return (isPromise(locale) ? locale.then(withCache) : withCache(locale, async === true || void 0));
+        return (isPromise(locale) ? locale.then(withCache) : withCache(locale, isAsync === true || void 0));
     };
     /* eslint-enable indent */
     detector = /** @type {NsOsLocale.LocaleDetector} */ (detectorBase(true));

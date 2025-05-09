@@ -51,7 +51,7 @@
     "lcid": "^4.0.1"
   },
   "devDependencies": {
-    "@types/node": "^20.10.6",
+    "@types/node": "^22.15.17",
     "jest": "29.7.0"
   },
   "scripts": {
