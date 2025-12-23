@@ -7,6 +7,7 @@ module.exports = {
   },
   verbose: true,
   testRegex: "test\\.js$",
+  collectCoverage: true,
   collectCoverageFrom: [
     "./cjs/index.js",
   ],

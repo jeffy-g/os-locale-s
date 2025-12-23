@@ -98,7 +98,7 @@ function parseLocale(str) {
             env[key] = value.replace(/^"|"$/g, "");
         }
         return env;
-    }, {});
+    }, /** @type {NodeJS.Dict<string>} */ ({}));
     return gel(env);
 }
 /**

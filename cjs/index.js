@@ -37,9 +37,7 @@ let detector;
      */
     // @ts-ignore
     const detectorBase = (isAsync) => (options = {}) => {
-        /* eslint-disable indent */
-        options = { spawn: true, cache: true, ...options };
-        const { cache } = options;
+        const { cache = true, spawn = true } = options;
         if (cache && cacheLocal.length) {
             return (isAsync ? Promise.resolve(cacheLocal) : cacheLocal);
         }
@@ -57,7 +55,7 @@ let detector;
             return /** @type {R} */ (mustPromise ? Promise.resolve(l) : l);
         };
         const envLocale = getEnvLocale();
-        if (envLocale || !options.spawn) {
+        if (envLocale || !spawn) {
             locale = /** @type {R} */ (purgeExtraToken(envLocale));
         }
         else {
@@ -69,7 +67,6 @@ let detector;
         }
         return (isPromise(locale) ? locale.then(withCache) : withCache(locale, isAsync === true || void 0));
     };
-    /* eslint-enable indent */
     detector = /** @type {NsOsLocale.LocaleDetector} */ (detectorBase(true));
     detector.sync = detectorBase();
     Object.defineProperties(detector, {
@@ -79,7 +76,7 @@ let detector;
             enumerable: false,
         },
         version: {
-            value: "v1.0.26",
+            value: "v1.0.27",
             enumerable: true,
         },
     });

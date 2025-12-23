@@ -1,6 +1,6 @@
 {
   "name": "os-locale-s",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "description": "Its a light weight version that minimizes the dependency module of `os-locale`",
   "private": false,
   "main": "./cjs/index.js",
@@ -48,10 +48,10 @@
     "region"
   ],
   "dependencies": {
-    "lcid": "^4.0.1"
+    "lcid": "4"
   },
   "devDependencies": {
-    "@types/node": "^22.15.17",
+    "@types/node": "^25.0.3",
     "jest": "29.7.0"
   },
   "scripts": {
