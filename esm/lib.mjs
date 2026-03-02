@@ -123,13 +123,13 @@ const isSupportedLocale = (locale, locales) => {
   const target = locale.trim();
   /* istanbul ignore if */
   if (!target) return false;
+  const withDot = `${target}.`,
+    withAt = `${target}@`;
   return locales
     .split(/\r?\n/)
     .some(
       (line) =>
-        line === target ||
-        line.startsWith(`${target}.`) ||
-        line.startsWith(`${target}@`),
+        line === target || line.startsWith(withDot) || line.startsWith(withAt),
     );
 };
 /**

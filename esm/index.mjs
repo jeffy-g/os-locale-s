@@ -39,18 +39,16 @@ let detector;
       );
     }
     const envLocale = getEnvLocale();
-    const platform = detectPlatform();
+    const useEnv = envLocale || !spawn;
     if (isAsync) {
-      const p =
-        envLocale || !spawn
-          ? Promise.resolve(purgeExtraToken(envLocale))
-          : localeDetectorMap[platform](true);
+      const p = useEnv
+        ? Promise.resolve(purgeExtraToken(envLocale))
+        : localeDetectorMap[detectPlatform()](true);
       return /** @type {R} */ (p.then((loc) => withCache(loc, cache)));
     }
-    const s =
-      envLocale || !spawn
-        ? purgeExtraToken(envLocale)
-        : localeDetectorMap[platform]();
+    const s = useEnv
+      ? purgeExtraToken(envLocale)
+      : localeDetectorMap[detectPlatform()]();
     return /** @type {R} */ (withCache(s, cache));
   };
   detector = /** @type {NsOsLocale.LocaleDetector} */ (
@@ -64,7 +62,7 @@ let detector;
       enumerable: false,
     },
     version: {
-      value: "v1.1.1",
+      value: "v1.1.2",
       enumerable: true,
     },
   });
