@@ -10,6 +10,7 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: [
     "./cjs/index.js",
+    "./cjs/lib.js",
   ],
   moduleFileExtensions: [
     "js"

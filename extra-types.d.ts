@@ -7,8 +7,14 @@
 */
 // 2026/03/02 11:25:27
 type TNativeResultProcessor = (result: string) => string;
+
 type TNativeLocaleDetector = <
   IsAsync extends true | void,
-  R extends If<IsAsync, Promise<string>, string>
+  R extends SelectIf<IsAsync, Promise<string>, string>
 >(isAsync?: IsAsync) => R;
-type TEmitLocalDetector = (command: string, processor?: TNativeResultProcessor) => TNativeLocaleDetector;
+
+type TEmitLocalDetector = (
+  command: string,
+  processor: TNativeResultProcessor,
+  // fallbackCommand?: string
+) => TNativeLocaleDetector;
