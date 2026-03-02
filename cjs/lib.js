@@ -1,9 +1,5 @@
+///<reference path="../index.d.ts"/>
 "use strict";
-/*!
- // Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
- // Released under the MIT license
- // https://opensource.org/licenses/mit-license.php
- */
 /*!
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Copyright (C) 2020 jeffy-g <hirotom1107@gmail.com>
@@ -11,53 +7,50 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-///<reference path="../index.d.ts"/>
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.localeGetters = exports.purgeExtraToken = exports.getEnvLocale = void 0;
-const cp = require("child_process");
-const lcid = require("lcid");
-const { execFile, execFileSync } = cp;
+exports.detectPlatform = exports.localeDetectorMap = exports.purgeExtraToken = exports.getEnvLocale = void 0;
+const child_process_1 = require("child_process");
+/**
+ * @import { ExecException, ExecSyncOptionsWithStringEncoding } from "child_process";
+ */
 const defaultLocale = "en_US";
+/** @type {ExecSyncOptionsWithStringEncoding} */
+const execOpt = {
+    encoding: "utf8",
+};
 /**
- * @template R
- * @typedef {{
- *     win32: () => R;
- *     darwin: () => R;
- *     linux: () => R;
- * }} TGetLocaleFunctions
- */
-/**
- * @typedef {ArrayLike<[() => Promise<string>, () => string]>[0]} TAsyncSyncPair
- */
-/**
- * @typedef {cp.ExecFileException} ExecFileException
- * @typedef {"defaults" | "locale" | "wmic"} TLocalCmdToken
- * @typedef TExecuteCmdOpt
- * @prop {true} [async]
- * @prop {TLocalCmdToken} command
- * @prop {readonly string[]} [args]
- */
-/**
- * @template {TExecuteCmdOpt} P
- * @template {Conditional<P["async"], string, Promise<string | ExecFileException>>} R
- * @param {P} options
+ * @template {true | void} P
+ * @template {If<P, Promise<string | ExecException>, string>} R
+ * @param {string} command
+ * @param {P=} async
  * @returns {R}
  * @date 2024-01-03
+ * @date 2026/03/02 By using exec and execSync, it is simplified.
  */
-function execCommand(options) {
-    const { async, command, args } = options;
+function execCommand(command, async) {
     if (async) {
         return /** @type {R} */ (new Promise((resolve) => {
-            execFile(command, args, (err, stdout) => resolve(err || stdout));
+            (0, child_process_1.exec)(command, execOpt, (err, stdout) => resolve(err || stdout));
         }));
     }
     try {
-        return /** @type {R} */ (execFileSync(command, args, { encoding: "utf8" }));
+        return /** @type {R} */ ((0, child_process_1.execSync)(command, execOpt));
     }
     catch (e) {
         return /** @type {R} */ (e);
     }
 }
+const isDebugMode = process.env.OS_LOCALE_S_DEBUG === "1";
+/**
+ * @param {string | Error} result
+ */
+/* istanbul ignore next */
+const getErrorMessage = (result) => {
+    if (result && typeof result === "object" && "message" in result) {
+        return String(result.message || "");
+    }
+    return "";
+};
 /**
  * If an exception occurs while executing command such as
  * `locale`, `wmic os get locale` the result cannot be applied,
@@ -67,28 +60,21 @@ function execCommand(options) {
  *
  * @todo latest error cache
  * @param {string | Error} result `string` or `Error` object
- * @param {(result: string) => string} [processor] If `result` is a `string`, delegate processing
+ * @param {TNativeResultProcessor} [processor] If `result` is a `string`, delegate processing
  * @todo strict check of `result`
  */
 function validate(result, processor) {
     if (typeof result === "string" && result.length) {
         return processor ? processor(result) : result.trim();
     }
-    else {
-        // @ts-ignore 
-        console.info(result.message);
+    if (isDebugMode) {
+        /* istanbul ignore next */
+        const message = getErrorMessage(result) || "locale command failed";
+        /* istanbul ignore next */
+        console.error(`[os-locale-s] ${message}`);
     }
     return defaultLocale;
 }
-/**
- * attempts to extract `LC_ALL`, `LC_MESSAGES`, `LANG`, `LANGUAGE` values from a map object like `process.env`
- *
- *  * If there is no value for those keys, it will be an empty string
- *
- * @param {NodeJS.Dict<string>} [env] more details see {@link https://nodejs.org/api/process.html#process_process_env process.env}
- */
-const gel = (env = process.env) => env.LC_ALL || env.LC_MESSAGES || env.LANG || env.LANGUAGE || "";
-exports.getEnvLocale = gel;
 /**
  * parse of `locale` command result string
  *
@@ -102,91 +88,83 @@ function parseLocale(str) {
         }
         return env;
     }, /** @type {NodeJS.Dict<string>} */ ({}));
-    return gel(env);
+    return (0, exports.getEnvLocale)(env);
 }
+/**
+ * attempts to extract `LC_ALL`, `LC_MESSAGES`, `LANG`, `LANGUAGE` values from a map object like `process.env`
+ *
+ *  * If there is no value for those keys, it will be an empty string
+ *
+ * @param {NodeJS.Dict<string>} [env] more details see {@link https://nodejs.org/api/process.html#process_process_env process.env}
+ */
+const getEnvLocale = (env = process.env) => env.LC_ALL || env.LC_MESSAGES || env.LANG || env.LANGUAGE || "";
+exports.getEnvLocale = getEnvLocale;
 /**
  * e.g - "en-US.utf8" => "en-US"
  *
  * @param {string} str probably, string like "en-US.utf8". if `str` is empty string then returns `en_US`.
  */
-const pet = (str) => (str && str.replace(/[.:].*/, "")) || defaultLocale;
-exports.purgeExtraToken = pet;
+const purgeExtraToken = (str) => (str && str.replace(/[.:].*/, "")) || defaultLocale;
+exports.purgeExtraToken = purgeExtraToken;
+/** @type {TEmitLocalDetector} */
+const emitDetector = (command, processor) => (isAsync) => {
+    if (isAsync) {
+        return /** @type {any} */ (execCommand(command, true).then(locale => validate(locale, processor)));
+    }
+    return validate(execCommand(command), processor);
+};
+/** @type {TNativeResultProcessor} */
+const unixProcessor = (result) => (0, exports.purgeExtraToken)(parseLocale(result));
+const detectUnixLocale = emitDetector("locale", unixProcessor);
+const localeNameCommand = "(get-culture).name";
+const winCommandLine = `powershell -NoProfile -NonInteractive -Command "[Console]::OutputEncoding=[Text.Encoding]::UTF8; ${localeNameCommand}"`;
+const detectWinLocale = emitDetector(winCommandLine, locale => locale.trim());
 /**
- * MAC OS
- *
  * @param {string} locale result of command `defaults -globalDomain -g AppleLocale`
  * @param {string} locales result of command `locale -a`
  */
 const getSupportedLocale = (locale, locales) => locales.includes(locale) ? locale : /* istanbul ignore next */ defaultLocale;
-/**
- * @typedef {(a: TLocalCmdToken, b: string[], c: TLocalCmdToken, d: string[]) => TAsyncSyncPair} TAppleLocaleFunctions
- */
-const [getAppleLocale, getAppleLocaleSync] = /** @type {TAppleLocaleFunctions} */ ((cmd0, args0, cmd1, args1) => {
-    return [
-        /**
-         * Locale detection for MAC OS
-         * @async
-         */
-        async () => {
-            const results = await Promise.all([
-                execCommand({
-                    async: true,
-                    command: cmd0, args: args0
-                }).then(validate),
-                execCommand({
-                    async: true,
-                    command: cmd1, args: args1
-                }).then(validate),
-            ]);
-            return getSupportedLocale(results[0], results[1]);
-        },
+/** @type {TNativeLocaleDetector} */
+const detectAppleLocale = (isAsync) => {
+    const localeCommand = "defaults read -globalDomain AppleLocale";
+    const listLocaleCommand = "locale -a";
+    if (isAsync) {
         /**
          * Locale detection for MAC OS
          */
-        () => getSupportedLocale(validate(execCommand({ command: cmd0, args: args0 })), validate(execCommand({ command: cmd1, args: args1 })))
-    ];
-})("defaults", ["read", "-globalDomain", "AppleLocale"], "locale", ["-a"]);
-/** @type {(a: TLocalCmdToken, b: string[], p: (result: string) => string) => TAsyncSyncPair} */
-const emitGetters = (command, args, processor) => {
-    return [
-        /**
-         * Locale detection for windows or UNIX OS
-         *
-         *   + `> locale`
-         *   + `> wmic os get locale`
-         *
-         * @async
-         */
-        async () => validate(await execCommand({ command, args, async: true }), processor),
-        /**
-         * Locale detection for windows or UNIX OS
-         */
-        () => validate(execCommand({ command, args }), processor)
-    ];
-};
-/** @type {Parameters<typeof validate>[1]} */
-const unixProcessor = (result) => {
-    return pet(parseLocale(result));
-};
-const [getUnixLocale, getUnixLocaleSync] = emitGetters("locale", [], unixProcessor);
-/**
- * @param {string} result
- * @see {@link lcid}
- */
-const parseLCID = (result) => {
-    const lcidCode = +("0x" + result.replace(/Locale|\s/g, ""));
-    return lcid.from(lcidCode) || /* istanbul ignore next */ defaultLocale;
-};
-const [getWinLocale, getWinLocaleSync] = emitGetters("wmic", ["os", "get", "locale"], parseLCID);
-/** @type {[ TGetLocaleFunctions<string>, TGetLocaleFunctions<Promise<string>> ]} */
-exports.localeGetters = [
-    {
-        win32: getWinLocaleSync,
-        darwin: getAppleLocaleSync,
-        linux: getUnixLocaleSync,
-    }, {
-        win32: getWinLocale,
-        darwin: getAppleLocale,
-        linux: getUnixLocale,
+        return /** @type {any} */ (Promise.all([
+            execCommand(localeCommand, true).then(validate),
+            execCommand(listLocaleCommand, true).then(validate),
+        ]).then(results => getSupportedLocale(results[0], results[1])));
     }
-];
+    /**
+     * Locale detection for MAC OS
+     */
+    return /** @type {any} */ (getSupportedLocale(validate(execCommand(localeCommand)), validate(execCommand(listLocaleCommand))));
+};
+/**
+ * Use the value of process.platform as the function name.
+ * The OS can be limited to 'win32' and 'darwin',
+ * but other OS must be Linux-based, so a check code like `detectPlatform` is required.
+ *
+ * @see {@link detectPlatform}
+ */
+exports.localeDetectorMap = {
+    win32: detectWinLocale,
+    darwin: detectAppleLocale,
+    linux: detectUnixLocale,
+};
+/**
+ * Use the value of `process.platform`.
+ * `darwin` can be limited to MAC OS, `win32` to Windows, and the command to get the locale is a little special.
+ * In addition, UNIX locale commands can be used for `aix`, `freebsd`, `linux`, `openbsd`, and `sunos`.
+ * @see {@link https://nodejs.org/api/process.html#processplatform process.platform}
+ */
+const detectPlatform = () => {
+    let { platform } = process;
+    if (platform !== "win32" && platform !== "darwin") {
+        platform = "linux";
+    }
+    return platform;
+};
+exports.detectPlatform = detectPlatform;

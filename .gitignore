@@ -113,3 +113,4 @@ bin
 dist
 
 jsdoc*
+.codex

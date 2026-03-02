@@ -4,8 +4,7 @@
 ![npm](https://img.shields.io/npm/dm/os-locale-s.svg?style=plastic)
 
 
-__Its a light weight version that minimizes the dependency module of `os-locale`__
-
+__Compatibility-first locale detector for mixed and legacy-like environments.__
 
 > Get the system [locale](https://en.wikipedia.org/wiki/Locale_(computer_software))
 
@@ -13,21 +12,30 @@ Useful for localizing your module or app.
 
 POSIX systems: The returned locale refers to the [`LC_MESSAGE`](http://www.gnu.org/software/libc/manual/html_node/Locale-Categories.html#Locale-Categories) category, suitable for selecting the language used in the user interface for message translation.
 
-## Motivacion
+## Motivation (Legacy Context)
 
-I was creating a module package and needed to detect the **locale**.
+Originally, this package was created as a lightweight rewrite for simple locale detection.
+That historical reason still matters, but the project now has its own direction.
 
-At that time, I found a module `os-locale` that provides the corresponding function in the npm package.
+## Project Position (2026)
 
-I just wanted to detect locale token such as "cs", "de", "es", "fr" etc but  
-`os-locale` installs as many as 27 npm packages, including indirectly dependent modules
-  + e.g - `yarn add os-locale`
+`os-locale` and `os-locale-s` are no longer trying to be the same thing.
+`os-locale-s` focuses on compatibility-first behavior for real-world environments, including restricted or legacy-like setups.
 
-I just wanted to detect a simple locale token but thought this was overwork and decided to rewrite the code.
+If your runtime is modern and up to date, check `os-locale` first.
+Recent upstream implementations are very lightweight and may already be the best default choice.
 
-At the same time, has been migrate to `TypeScript` as well.
+Use `os-locale-s` when you need legacy-friendly behavior, stricter fallback handling, or env-first control in mixed environments.
 
-> As a result, the number of npm packages installed in `os-locale-s` has been reduced to 3 including `os-locale-s`
+## Legacy-Friendly Behavior
+
+- Environment-first detection via `LC_ALL`, `LC_MESSAGES`, `LANG`, `LANGUAGE`
+- `spawn: false` mode for environments where subprocess execution is restricted
+- Platform detectors when spawning is enabled
+- Windows: PowerShell locale name
+- macOS: `defaults` + `locale -a`
+- Linux/Unix: `locale`
+- Safe fallback to `en_US` if commands fail
 
 
 ## Install

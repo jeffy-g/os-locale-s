@@ -1,3 +1,4 @@
+/// <reference path="./index.d.ts"/>
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /*!
@@ -7,7 +8,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-/// <reference path="./index.d.ts"/>
 const fs = require("fs");
 /**
  * @typedef {typeof process.platform} TOSTokens

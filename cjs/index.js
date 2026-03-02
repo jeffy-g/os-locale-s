@@ -1,11 +1,7 @@
+///<reference path="../index.d.ts"/>
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.osLocale = void 0;
-/*!
- // Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
- // Released under the MIT license
- // https://opensource.org/licenses/mit-license.php
- */
 /*!
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Copyright (C) 2020 jeffy-g <hirotom1107@gmail.com>
@@ -14,58 +10,47 @@ exports.osLocale = void 0;
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 // @ts-check
-///<reference path="../index.d.ts"/>
 const lib = require("./lib");
-/**
- * @typedef {(o: any) => o is Promise<any>} TPromiseChecker
- */
 /** @type {NsOsLocale.LocaleDetector} */
 let detector;
 {
-    const { localeGetters, getEnvLocale, purgeExtraToken } = lib;
-    /**
-     * The argument values ​​passed to this function are always string or Promises.
-     * @type {TPromiseChecker}
-     */
-    const isPromise = (o) => typeof o.then === "function";
+    const { localeDetectorMap, getEnvLocale, purgeExtraToken, detectPlatform } = lib;
     let cacheLocal = "";
     /**
+     * @param {string} localeToken
+     * @param {boolean} cache
+     * @returns {string}
+     */
+    const withCache = (localeToken, cache) => {
+        localeToken = localeToken.replace(/_/g, "-");
+        cacheLocal = cache ? localeToken : "";
+        return localeToken;
+    };
+    /**
      * @template {true | void} IsAsync
-     * @template {Conditional<IsAsync, string, Promise<string>>} R
+     * @template {If<IsAsync, Promise<string>, string>} R
      * @param {IsAsync=} isAsync
      * @returns {(options?: NsOsLocale.LocaleDetectorOptions) => R}
      */
-    // @ts-ignore
-    const detectorBase = (isAsync) => (options = {}) => {
-        const { cache = true, spawn = true } = options;
+    const detectorBase = (isAsync) =>
+    /** @type {(options?: NsOsLocale.LocaleDetectorOptions) => R} */
+    (options) => {
+        const { cache = true, spawn = true } = options || {};
         if (cache && cacheLocal.length) {
-            return (isAsync ? Promise.resolve(cacheLocal) : cacheLocal);
+            return /** @type {R} */ (isAsync ? Promise.resolve(cacheLocal) : cacheLocal);
         }
-        const functions = localeGetters[+(!!isAsync)];
-        /** @type {R} */
-        let locale;
-        /**
-         * @param {string} l
-         * @param {true} [mustPromise]
-         * @returns {R}
-         */
-        const withCache = (l, mustPromise) => {
-            l = l.replace(/_/, "-");
-            cacheLocal = cache ? l : "";
-            return /** @type {R} */ (mustPromise ? Promise.resolve(l) : l);
-        };
         const envLocale = getEnvLocale();
-        if (envLocale || !spawn) {
-            locale = /** @type {R} */ (purgeExtraToken(envLocale));
+        const platform = detectPlatform();
+        if (isAsync) {
+            const p = envLocale || !spawn
+                ? Promise.resolve(purgeExtraToken(envLocale))
+                : localeDetectorMap[platform](true);
+            return /** @type {R} */ (p.then(loc => withCache(loc, cache)));
         }
-        else {
-            let { platform } = process;
-            if (platform !== "win32" && platform !== "darwin") {
-                platform = "linux";
-            }
-            locale = /** @type {R} */ (functions[platform]());
-        }
-        return (isPromise(locale) ? locale.then(withCache) : withCache(locale, isAsync === true || void 0));
+        const s = envLocale || !spawn
+            ? purgeExtraToken(envLocale)
+            : localeDetectorMap[platform]();
+        return /** @type {R} */ (withCache(s, cache));
     };
     detector = /** @type {NsOsLocale.LocaleDetector} */ (detectorBase(true));
     detector.sync = detectorBase();
@@ -76,7 +61,7 @@ let detector;
             enumerable: false,
         },
         version: {
-            value: "v1.0.27",
+            value: "v1.1.0",
             enumerable: true,
         },
     });

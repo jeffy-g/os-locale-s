@@ -16,8 +16,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 21.x]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        node-version: [14.x, 18.x, 22.x, 24.x]
+        os: [ubuntu-latest, macos-latest, windows-latest, windows-11-arm]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,4 +28,5 @@ jobs:
     - run: |
         yarn install
         locale
-        yarn test
+        # yarn test
+        npx jest --silent=false --colors -c=jest.configjs.js && cat logs/dots_test-result.json

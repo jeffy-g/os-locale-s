@@ -1,8 +1,3 @@
-//
-// Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
-// Released under the MIT license
-// https://opensource.org/licenses/mit-license.php
-//
 /*!
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Copyright (C) 2020 jeffy-g <hirotom1107@gmail.com>
@@ -10,35 +5,10 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
+/// <reference path="./extra-types.d.ts" preserve="true"/>
 
 declare global {
-  /**
-   * T is falsy then return A, trusy then B
-   * 
-   * ```ts
-   * type ConditionalX<T, A, B> = T extends (void | false | undefined) ? A : B // <- maybe not works
-   * type Conditional<T, A, B> = void extends T ? A : T extends (void | false | undefined) ? A : B;
-   * 
-   * function x<T extends true | void, R extends ConditionalX<T, string, string[]>>(need?: T): R {
-   *     return (need? "": [""]) as R;
-   * }
-   * // string | string[]
-   * const xret = x();
-   * // string[]
-   * const xret2 = x(true);
-   * 
-   * function ok<T extends true | void, R extends Conditional<T, string, string[]>>(need?: T): R {
-   *     return (need? "": [""]) as R;
-   * }
-   * // string
-   * const okret = ok();
-   * // string[]
-   * const okret2 = ok(true);
-   * ```
-   * 
-   * @date 20/03/31
-   */
-  type Conditional<T, A, B> = void extends T ? A : T extends (void | false | undefined) ? A : B;
+  type If<T, A, B> = void extends T ? B : A;
 }
 
 export declare interface LocaleDetectorOptions {
@@ -49,6 +19,8 @@ export declare interface LocaleDetectorOptions {
    */
   readonly spawn?: boolean;
   /**
+   * The first result is cached and used the next time.
+   * 
    * @default true
    */
   readonly cache?: boolean;
@@ -89,7 +61,7 @@ export declare interface LocaleDetector extends LocaleDetectorBase {
  * @internal
  */
 export type TInternalLocaleDetectorSig = {
-  bivarianceHack<IsAsync extends true | void, R extends Conditional<IsAsync, string, Promise<string>>>(async?: IsAsync): (options?: LocaleDetectorOptions) => R;
+  bivarianceHack<IsAsync extends true | void, R extends If<IsAsync, Promise<string>, string>>(async?: IsAsync): (options?: LocaleDetectorOptions) => R;
 }["bivarianceHack"];
 // /**
 //  * @internal
