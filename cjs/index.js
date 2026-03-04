@@ -14,8 +14,7 @@ const lib = require("./lib");
 /** @type {NsOsLocale.LocaleDetector} */
 let detector;
 {
-  const { localeDetectorMap, getEnvLocale, purgeExtraToken, detectPlatform } =
-    lib;
+  const { detectNativeLocale, getEnvLocale, purgeExtraToken } = lib;
   let cacheLocal = "";
   /**
    * @param {string} localeToken
@@ -42,16 +41,14 @@ let detector;
       );
     }
     const envLocale = getEnvLocale();
-    const useEnv = envLocale || !spawn;
+    const useEnv = !!(envLocale || !spawn);
     if (isAsync) {
       const p = useEnv
         ? Promise.resolve(purgeExtraToken(envLocale))
-        : localeDetectorMap[detectPlatform()](true);
+        : detectNativeLocale(true);
       return /** @type {R} */ (p.then((loc) => withCache(loc, cache)));
     }
-    const s = useEnv
-      ? purgeExtraToken(envLocale)
-      : localeDetectorMap[detectPlatform()]();
+    const s = useEnv ? purgeExtraToken(envLocale) : detectNativeLocale();
     return /** @type {R} */ (withCache(s, cache));
   };
   detector = /** @type {NsOsLocale.LocaleDetector} */ (
@@ -65,7 +62,7 @@ let detector;
       enumerable: false,
     },
     version: {
-      value: "v1.1.2",
+      value: "v1.1.3",
       enumerable: true,
     },
   });

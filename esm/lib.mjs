@@ -188,7 +188,7 @@ export const purgeExtraToken = (str) =>
  * In addition, UNIX locale commands can be used for `aix`, `freebsd`, `linux`, `openbsd`, and `sunos`.
  * @see {@link https://nodejs.org/api/process.html#processplatform process.platform}
  */
-export const detectPlatform = () => {
+const detectPlatform = () => {
   let { platform } = process;
   if (platform !== "win32" && platform !== "darwin") {
     platform = "linux";
@@ -202,8 +202,13 @@ export const detectPlatform = () => {
  *
  * @see {@link detectPlatform}
  */
-export const localeDetectorMap = {
+const localeDetectorMap = {
   win32: detectWinLocale,
   darwin: detectAppleLocale,
   linux: detectUnixLocale,
+};
+/** @type {TNativeLocaleDetector} */
+export const detectNativeLocale = (isAsync) => {
+  const detector = localeDetectorMap[detectPlatform()];
+  return detector(isAsync);
 };

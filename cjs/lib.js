@@ -8,8 +8,7 @@
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.localeDetectorMap =
-  exports.detectPlatform =
+exports.detectNativeLocale =
   exports.purgeExtraToken =
   exports.getEnvLocale =
     void 0;
@@ -209,7 +208,6 @@ const detectPlatform = () => {
   }
   return platform;
 };
-exports.detectPlatform = detectPlatform;
 /**
  * Use the value of process.platform as the function name.
  * The OS can be limited to 'win32' and 'darwin',
@@ -217,8 +215,14 @@ exports.detectPlatform = detectPlatform;
  *
  * @see {@link detectPlatform}
  */
-exports.localeDetectorMap = {
+const localeDetectorMap = {
   win32: detectWinLocale,
   darwin: detectAppleLocale,
   linux: detectUnixLocale,
 };
+/** @type {TNativeLocaleDetector} */
+const detectNativeLocale = (isAsync) => {
+  const detector = localeDetectorMap[detectPlatform()];
+  return detector(isAsync);
+};
+exports.detectNativeLocale = detectNativeLocale;
