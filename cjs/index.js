@@ -43,13 +43,13 @@ let detector;
     const envLocale = getEnvLocale();
     const useEnv = !!(envLocale || !spawn);
     if (isAsync) {
-      const p = useEnv
+      const promise = useEnv
         ? Promise.resolve(purgeExtraToken(envLocale))
         : detectNativeLocale(true);
-      return /** @type {R} */ (p.then((loc) => withCache(loc, cache)));
+      return /** @type {R} */ (promise.then((loc) => withCache(loc, cache)));
     }
-    const s = useEnv ? purgeExtraToken(envLocale) : detectNativeLocale();
-    return /** @type {R} */ (withCache(s, cache));
+    const locale = useEnv ? purgeExtraToken(envLocale) : detectNativeLocale();
+    return /** @type {R} */ (withCache(locale, cache));
   };
   detector = /** @type {NsOsLocale.LocaleDetector} */ (
     (opt) => detectorBase(opt, true)

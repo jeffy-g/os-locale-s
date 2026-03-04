@@ -37,3 +37,8 @@ jobs:
         yarn install
         locale
         yarn test
+    - name: Upload results to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.node-version == '24.x'
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
