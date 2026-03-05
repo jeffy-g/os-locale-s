@@ -6,12 +6,9 @@
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 /// <reference path="./extra-types.d.ts" preserve="true"/>
-
-
 declare global {
   type SelectIf<T, A, B> = void extends T ? B : A;
 }
-
 export declare interface LocaleDetectorOptions {
   /**
    * Set to `false` to avoid spawning subprocesses and instead only resolve the locale from environment variables.
@@ -48,7 +45,6 @@ export declare interface LocaleDetectorBase {
    */
   readonly version: string;
 }
-
 export declare interface LocaleDetector extends LocaleDetectorBase {
   /**
    * Synchronously get the system [locale](https://en.wikipedia.org/wiki/Locale_(computer_software)).
@@ -57,17 +53,5 @@ export declare interface LocaleDetector extends LocaleDetectorBase {
    */
   sync(options?: LocaleDetectorOptions): string;
 }
-
-// /**
-//  * @internal
-//  */
-// export type TInternalLocaleDetectorSig = {
-//   bivarianceHack<
-//     IsAsync extends true | void,
-//     R extends SelectIf<IsAsync, Promise<string>, string>
-//   >(options?: LocaleDetectorOptions, isAsync?: IsAsync): R;
-// }["bivarianceHack"];
-
-
 export declare const osLocale: LocaleDetector;
 export as namespace NsOsLocale;

@@ -5,16 +5,12 @@
   https://opensource.org/licenses/mit-license.php
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-// 2026/03/02 11:25:27
 type TNativeResultProcessor = (result: string) => string;
-
 type TNativeLocaleDetector = <
-  IsAsync extends true | void,
-  R extends SelectIf<IsAsync, Promise<string>, string>
+  IsAsync extends true | void = void,
+  R = SelectIf<IsAsync, Promise<string>, string>
 >(isAsync?: IsAsync) => R;
-
 type TEmitLocalDetector = (
   command: string,
   processor: TNativeResultProcessor,
-  // fallbackCommand?: string
 ) => TNativeLocaleDetector;

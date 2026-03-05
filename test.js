@@ -1,3 +1,4 @@
+/// <reference types="jest" preserve="true"/>
 /// <reference path="./index.d.ts"/>
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -44,6 +45,11 @@ const DEFAULT = 1;
 const WIN = 1;
 const LINUX = 1;
 const DARWIN = 1;
+/**
+ * ```
+ * /^(?:[a-z]{2}-[A-Z]{2}|C|POSIX)$/
+ * ```
+ */
 const reLocale = /^(?:[a-z]{2}-[A-Z]{2}|C|POSIX)$/;
 /** @type {TProcessCache} */
 const cache = {
@@ -88,6 +94,7 @@ function makeOption(bools) {
   isBool(cache) && (opt.cache = cache);
   return isBool(spawn) || isBool(cache) ? opt : void 0;
 }
+/** @type {(ls: string) => void} */
 const tryMatch = (lc) => {
   try {
     expect(lc).toMatch(reLocale);

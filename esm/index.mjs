@@ -24,8 +24,8 @@ let detector;
     return localeToken;
   };
   /**
-   * @template {true | void} IsAsync
-   * @template {SelectIf<IsAsync, Promise<string>, string>} R
+   * @template {true | void} [IsAsync=void]
+   * @template [R=SelectIf<IsAsync, Promise<string>, string>]
    * @param {NsOsLocale.LocaleDetectorOptions=} options
    * @param {IsAsync=} isAsync
    * @returns {R}
@@ -59,7 +59,7 @@ let detector;
       enumerable: false,
     },
     version: {
-      value: "v1.1.3",
+      value: "v1.1.4",
       enumerable: true,
     },
   });
